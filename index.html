@@ -1,0 +1,515 @@
+<!DOCTYPE html>
+<html lang="mr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="theme-color" content="#1a0533" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <title>श्री राम जय राम जय जय राम नाम जप:</title>
+
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    html, body {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background: #1a0533;
+      font-family: 'Segoe UI', sans-serif;
+      touch-action: none;
+    }
+
+    /* ── FULL SCREEN IMAGE ── */
+    #bg-image {
+      position: fixed;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      object-position: center top;
+      z-index: 0;
+      display: block;
+    }
+
+    /* ── DARK GRADIENT OVERLAY ── */
+    #overlay {
+      position: fixed;
+      inset: 0;
+      background: linear-gradient(
+        to bottom,
+        rgba(0,0,0,0.10) 0%,
+        rgba(0,0,0,0.05) 40%,
+        rgba(26,5,51,0.70) 75%,
+        rgba(26,5,51,0.92) 100%
+      );
+      z-index: 1;
+    }
+
+    /* ── FLOATING PARTICLES ── */
+    .particles {
+      position: fixed;
+      inset: 0;
+      z-index: 2;
+      pointer-events: none;
+      overflow: hidden;
+    }
+    .particle {
+      position: absolute;
+      width: 4px;
+      height: 4px;
+      border-radius: 50%;
+      background: rgba(255,215,0,0.6);
+      animation: float linear infinite;
+    }
+    @keyframes float {
+      0%   { transform: translateY(110vh) scale(0); opacity: 0; }
+      10%  { opacity: 1; }
+      90%  { opacity: 0.8; }
+      100% { transform: translateY(-10vh) scale(1.5); opacity: 0; }
+    }
+
+    /* ── MUSIC CONTROL BAR (bottom) ── */
+    #music-bar {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      z-index: 10;
+      padding: 18px 24px 30px;
+      background: linear-gradient(to top, rgba(10,2,20,0.95), transparent);
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    /* Play/Pause Button */
+    #play-btn {
+      width: 54px;
+      height: 54px;
+      border-radius: 50%;
+      border: none;
+      background: linear-gradient(135deg, #f7c948, #e07b00);
+      color: #1a0533;
+      font-size: 22px;
+      cursor: pointer;
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 4px 20px rgba(247,201,72,0.5);
+      transition: transform 0.15s ease, box-shadow 0.15s ease;
+      -webkit-tap-highlight-color: transparent;
+    }
+    #play-btn:active {
+      transform: scale(0.92);
+      box-shadow: 0 2px 10px rgba(247,201,72,0.4);
+    }
+
+    /* Song info */
+    .song-info {
+      flex: 1;
+      overflow: hidden;
+    }
+    .song-title {
+      color: #fff;
+      font-size: 15px;
+      font-weight: 600;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .song-sub {
+      color: rgba(255,255,255,0.55);
+      font-size: 12px;
+      margin-top: 2px;
+    }
+
+    /* Progress bar */
+    .progress-wrap {
+      position: fixed;
+      bottom: 118px;
+      left: 24px;
+      right: 24px;
+      z-index: 10;
+    }
+    #progress-bar {
+      width: 100%;
+      height: 3px;
+      -webkit-appearance: none;
+      appearance: none;
+      background: rgba(255,255,255,0.2);
+      border-radius: 2px;
+      outline: none;
+      cursor: pointer;
+    }
+    #progress-bar::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      background: #f7c948;
+      margin-top: -5.5px;
+      box-shadow: 0 0 6px rgba(247,201,72,0.8);
+    }
+    #progress-bar::-webkit-slider-runnable-track {
+      height: 3px;
+      border-radius: 2px;
+    }
+    .time-row {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 6px;
+    }
+    .time-row span {
+      color: rgba(255,255,255,0.5);
+      font-size: 11px;
+    }
+
+    /* Equalizer bars animation */
+    #eq {
+      display: flex;
+      align-items: flex-end;
+      gap: 3px;
+      height: 28px;
+      flex-shrink: 0;
+    }
+    .eq-bar {
+      width: 3px;
+      border-radius: 2px;
+      background: #f7c948;
+      animation: eq-bounce 0.6s ease-in-out infinite alternate;
+      transform-origin: bottom;
+    }
+    .eq-bar:nth-child(1) { animation-duration: 0.5s; }
+    .eq-bar:nth-child(2) { animation-duration: 0.7s; animation-delay: 0.1s; }
+    .eq-bar:nth-child(3) { animation-duration: 0.4s; animation-delay: 0.2s; }
+    .eq-bar:nth-child(4) { animation-duration: 0.8s; animation-delay: 0.05s; }
+    .eq-bar:nth-child(5) { animation-duration: 0.55s; animation-delay: 0.15s; }
+    @keyframes eq-bounce {
+      from { height: 4px; opacity: 0.5; }
+      to   { height: 22px; opacity: 1; }
+    }
+    #eq.paused .eq-bar {
+      animation-play-state: paused;
+      height: 4px;
+      opacity: 0.4;
+    }
+
+    /* ── TOP TITLE (optional) ── */
+    #top-title {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 10;
+      padding: 20px 20px 12px;
+      background: linear-gradient(to bottom, rgba(10,2,20,0.7), transparent);
+      text-align: center;
+    }
+    #top-title h1 {
+      color: #fff;
+      font-size: 20px;
+      font-weight: 700;
+      letter-spacing: 1px;
+      text-shadow: 0 2px 12px rgba(0,0,0,0.6);
+    }
+    #top-title p {
+      color: rgba(255,215,0,0.8);
+      font-size: 12px;
+      margin-top: 2px;
+    }
+
+    /* ── LOCK SCREEN NOTE (shown once) ── */
+    #lock-hint {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      z-index: 20;
+      background: rgba(10,2,20,0.88);
+      border: 1px solid rgba(247,201,72,0.4);
+      border-radius: 18px;
+      padding: 22px 28px;
+      text-align: center;
+      max-width: 280px;
+      backdrop-filter: blur(10px);
+      animation: fadeIn 0.5s ease;
+    }
+    #lock-hint .icon { font-size: 40px; margin-bottom: 10px; }
+    #lock-hint p { color: #fff; font-size: 14px; line-height: 1.6; }
+    #lock-hint button {
+      margin-top: 16px;
+      padding: 10px 28px;
+      background: linear-gradient(135deg, #f7c948, #e07b00);
+      color: #1a0533;
+      border: none;
+      border-radius: 30px;
+      font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translate(-50%, -48%); }
+      to   { opacity: 1; transform: translate(-50%, -50%); }
+    }
+
+    /* Volume control */
+    #vol-btn {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      border: 1px solid rgba(255,255,255,0.2);
+      background: rgba(255,255,255,0.08);
+      color: #fff;
+      font-size: 16px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+  </style>
+</head>
+<body>
+
+  <!-- ── FULL SCREEN IMAGE ── -->
+  <!-- 📌 आपल्या image चे नाव इथे बदला -->
+  <img id="bg-image" src="photo.jpg" alt="Background" 
+       onerror="this.style.background='linear-gradient(135deg,#1a0533,#4a0e8f)'; this.src=''; this.style.display='block';" />
+
+  <!-- OVERLAY -->
+  <div id="overlay"></div>
+
+  <!-- PARTICLES -->
+  <div class="particles" id="particles"></div>
+
+  <!-- TOP TITLE -->
+  <div id="top-title">
+    <h1>श्री राम जय राम जय जय राम नाम जप:</h1>
+    <p>*श्री राम जय राम जय जय राम नाम जप*</p>
+  </div>
+
+  <!-- LOCK SCREEN HINT (first visit) -->
+  <div id="lock-hint">
+    <div class="icon">🎵🔒</div>
+    <p>Screen बंद केल्यावरही गाणे चालू राहण्यासाठी <strong style="color:#f7c948">Play</strong> दाबा आणि मग screen बंद करा.</p>
+    <button onclick="startAndClose()">▶ गाणे सुरू करा</button>
+  </div>
+
+  <!-- PROGRESS BAR -->
+  <div class="progress-wrap">
+    <input type="range" id="progress-bar" value="0" min="0" max="100" step="0.1" />
+    <div class="time-row">
+      <span id="time-current">0:00</span>
+      <span id="time-total">0:00</span>
+    </div>
+  </div>
+
+  <!-- MUSIC BAR -->
+  <div id="music-bar">
+    <button id="play-btn" onclick="togglePlay()">▶</button>
+
+    <div class="song-info">
+      <!-- 📌 गाण्याचे नाव इथे बदला -->
+      <div class="song-title" id="song-name">श्री राम जय राम जय जय राम नाम जप:</div>
+      <div class="song-sub">🎵 Screen बंद केली तरी गाणे चालू राहते 🎵</div>
+    </div>
+
+    <!-- Equalizer -->
+    <div id="eq" class="paused">
+      <div class="eq-bar"></div>
+      <div class="eq-bar"></div>
+      <div class="eq-bar"></div>
+      <div class="eq-bar"></div>
+      <div class="eq-bar"></div>
+    </div>
+
+    <!-- Volume Mute -->
+    <button id="vol-btn" onclick="toggleMute()">🔊</button>
+  </div>
+
+  <!-- AUDIO ELEMENT -->
+  <!-- 📌 आपल्या audio file चे नाव इथे बदला -->
+  <audio id="audio" loop preload="auto">
+    <source src="song.mp3" type="audio/mpeg" />
+    <!-- Fallback: -->
+    <source src="song.ogg" type="audio/ogg" />
+  </audio>
+
+  <script>
+    const audio = document.getElementById('audio');
+    const playBtn = document.getElementById('play-btn');
+    const eq = document.getElementById('eq');
+    const progressBar = document.getElementById('progress-bar');
+    const timeCurrent = document.getElementById('time-current');
+    const timeTotal = document.getElementById('time-total');
+    const volBtn = document.getElementById('vol-btn');
+
+    let isPlaying = false;
+    let isMuted = false;
+
+    // ── PARTICLES ──
+    const container = document.getElementById('particles');
+    for (let i = 0; i < 18; i++) {
+      const p = document.createElement('div');
+      p.className = 'particle';
+      p.style.left = Math.random() * 100 + 'vw';
+      p.style.animationDuration = (5 + Math.random() * 8) + 's';
+      p.style.animationDelay = (Math.random() * 8) + 's';
+      p.style.width = p.style.height = (2 + Math.random() * 5) + 'px';
+      p.style.background = `hsla(${40 + Math.random()*30},100%,${60+Math.random()*20}%,0.7)`;
+      container.appendChild(p);
+    }
+
+    // ── PLAY / PAUSE ──
+    function togglePlay() {
+      if (isPlaying) {
+        audio.pause();
+        playBtn.textContent = '▶';
+        eq.classList.add('paused');
+        isPlaying = false;
+      } else {
+        audio.play().then(() => {
+          playBtn.textContent = '⏸';
+          eq.classList.remove('paused');
+          isPlaying = true;
+        }).catch(e => {
+          console.warn('Autoplay blocked:', e);
+        });
+      }
+    }
+
+    // ── START FROM HINT ──
+    function startAndClose() {
+      document.getElementById('lock-hint').style.display = 'none';
+      audio.play().then(() => {
+        playBtn.textContent = '⏸';
+        eq.classList.remove('paused');
+        isPlaying = true;
+        // Request media session for lock screen controls
+        setupMediaSession();
+      }).catch(e => {
+        document.getElementById('lock-hint').style.display = 'none';
+      });
+    }
+
+    // ── MUTE ──
+    function toggleMute() {
+      isMuted = !isMuted;
+      audio.muted = isMuted;
+      volBtn.textContent = isMuted ? '🔇' : '🔊';
+    }
+
+    // ── PROGRESS ──
+    audio.addEventListener('timeupdate', () => {
+      if (!audio.duration) return;
+      const pct = (audio.currentTime / audio.duration) * 100;
+      progressBar.value = pct;
+      timeCurrent.textContent = fmtTime(audio.currentTime);
+    });
+
+    audio.addEventListener('loadedmetadata', () => {
+      timeTotal.textContent = fmtTime(audio.duration);
+    });
+
+    progressBar.addEventListener('input', () => {
+      if (audio.duration) {
+        audio.currentTime = (progressBar.value / 100) * audio.duration;
+      }
+    });
+
+    function fmtTime(s) {
+      const m = Math.floor(s / 60);
+      const sec = Math.floor(s % 60);
+      return `${m}:${sec.toString().padStart(2, '0')}`;
+    }
+
+    // ── MEDIA SESSION API (Lock Screen Controls) ──
+    // हे Android/iOS वर lock screen वर Play/Pause दाखवते
+    function setupMediaSession() {
+      if ('mediaSession' in navigator) {
+        navigator.mediaSession.metadata = new MediaMetadata({
+          title: document.getElementById('song-name').textContent,
+          artist: 'श्री राम जय राम जय जय राम नाम जप:',
+          album: 'Background Music',
+          // artwork: [{ src: 'photo.jpg', sizes: '512x512', type: 'image/jpeg' }]
+        });
+
+        navigator.mediaSession.setActionHandler('play', () => {
+          audio.play();
+          playBtn.textContent = '⏸';
+          eq.classList.remove('paused');
+          isPlaying = true;
+        });
+
+        navigator.mediaSession.setActionHandler('pause', () => {
+          audio.pause();
+          playBtn.textContent = '▶';
+          eq.classList.add('paused');
+          isPlaying = false;
+        });
+
+        navigator.mediaSession.setActionHandler('seekbackward', () => {
+          audio.currentTime = Math.max(0, audio.currentTime - 10);
+        });
+
+        navigator.mediaSession.setActionHandler('seekforward', () => {
+          audio.currentTime = Math.min(audio.duration, audio.currentTime + 10);
+        });
+      }
+    }
+
+    // Wake Lock API — screen बंद होऊ नये असे request करते (optional)
+    async function requestWakeLock() {
+      try {
+        if ('wakeLock' in navigator) {
+          const wl = await navigator.wakeLock.request('screen');
+          document.addEventListener('visibilitychange', async () => {
+            if (document.visibilityState === 'visible') {
+              await navigator.wakeLock.request('screen');
+            }
+          });
+        }
+      } catch(e) {}
+    }
+
+    // Audio keeps playing when page goes hidden (background tab / screen off)
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'hidden' && isPlaying) {
+        // Audio continues — browser allows this for media elements
+        // MediaSession ensures lock screen controls remain visible
+      }
+    });
+
+    // Auto-dismiss hint if user taps anywhere else
+    document.getElementById('overlay').addEventListener('click', () => {
+      const hint = document.getElementById('lock-hint');
+      if (hint.style.display !== 'none') {
+        hint.style.display = 'none';
+      }
+    });
+  </script>
+  <!-- CREDIT LINE -->
+<div style="
+  position: fixed;
+  bottom: 10px;
+  width: 100%;
+  text-align: center;
+  color: rgba(255,255,255,0.5);
+  font-size: 0.7rem;
+  font-family: Poppins, sans-serif;
+  letter-spacing: 1px;
+  z-index: 10;
+  pointer-events: none;
+">
+  ✨ Created by <strong style="color:rgba(255,255,255,0.8)">Mahesh S</strong> &nbsp;•&nbsp;@-2026
+</div>
+</body>
+</html>
